@@ -11,15 +11,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     const epochTime = parseInt(info.selectionText.trim(), 10);
     if (!isNaN(epochTime)) {
       const convertedDate = new Date(epochTime).toLocaleString();
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        function: showConvertedDate,
-        args: [convertedDate],
-      });
+      chrome.tabs.sendMessage(tab.id, { date: convertedDate });
     }
   }
 });
-
-function showConvertedDate(convertedDate) {
-  alert(`Converted Date: ${convertedDate}`);
-}
