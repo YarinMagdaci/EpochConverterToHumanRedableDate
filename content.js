@@ -5,7 +5,24 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-function showPopup(date) {
+document.addEventListener("keydown", function (event) {
+  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === "E") {
+    const selection = window.getSelection().toString().trim();
+    const epochTime = parseInt(selection, 10);
+    if (!isNaN(epochTime)) {
+      const convertedDate = new Date(epochTime).toLocaleString();
+      showPopup(convertedDate);
+    }
+  }
+});
+
+document.addEventListener("keydown", function (event) {
+  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === "Y") {
+    showPopup(null, false);
+  }
+});
+
+function showPopup(date, isConvert = true) {
   const existingPopup = document.getElementById("epochConverterPopup");
   if (existingPopup) {
     existingPopup.remove();
@@ -13,11 +30,14 @@ function showPopup(date) {
 
   const popup = document.createElement("div");
   popup.setAttribute("id", "epochConverterPopup");
-  popup.innerHTML = `Converted Date: ${date}`; // Change textContent to innerHTML to include HTML elements.
+  if (isConvert) {
+    popup.innerHTML = `Converted Date: ${date}`;
+  } else {
+    popup.innerHTML = `Date now epoch time is: ${Date.now()}`;
+  }
 
-  // Create close button
   const closeButton = document.createElement("span");
-  closeButton.innerHTML = "&times;"; // Using HTML entity for 'x'
+  closeButton.innerHTML = "&times;";
   closeButton.style.cssText = `
     position: absolute;
     top: 5px;
@@ -31,12 +51,10 @@ function showPopup(date) {
     height: 10px;
   `;
 
-  // Close button functionality
-  closeButton.onclick = function() {
+  closeButton.onclick = function () {
     popup.remove();
   };
 
-  // Add closeButton to the popup
   popup.appendChild(closeButton);
 
   Object.assign(popup.style, {
@@ -53,36 +71,8 @@ function showPopup(date) {
     color: "#000",
     display: "flex",
     justifyContent: "space-between",
-    width: "270px"
+    width: "270px",
   });
 
   document.body.appendChild(popup);
 }
-
-// function showPopup(date) {
-//   const existingPopup = document.getElementById("epochConverterPopup");
-//   if (existingPopup) {
-//     existingPopup.remove();
-//   }
-
-//   const popup = document.createElement("div");
-//   popup.setAttribute("id", "epochConverterPopup");
-//   popup.textContent = `Converted Date: ${date}`;
-//   Object.assign(popup.style, {
-//     position: "fixed",
-//     top: "20px",
-//     right: "20px",
-//     backgroundColor: "#f9f9f9",
-//     border: "1px solid #ccc",
-//     padding: "10px",
-//     borderRadius: "5px",
-//     zIndex: "10000",
-//     boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-//     fontSize: "14px",
-//     color: "#000",
-//   });
-
-//   document.body.appendChild(popup);
-
-//   setTimeout(() => popup.remove(), 7000);
-// }
