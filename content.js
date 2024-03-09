@@ -5,20 +5,36 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-document.addEventListener("keydown", function (event) {
-  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === "E") {
-    const selection = window.getSelection().toString().trim();
-    const epochTime = parseInt(selection, 10);
-    if (!isNaN(epochTime)) {
-      const convertedDate = new Date(epochTime).toLocaleString();
-      showPopup(convertedDate);
-    }
-  }
-});
+let keydownTimeoutId = null;
 
-document.addEventListener("keydown", function (event) {
-  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === "Y") {
-    showPopup(null, false);
+document.addEventListener("keydown", function(event) {
+  if (keydownTimeoutId) {
+    clearTimeout(keydownTimeoutId);
+    keydownTimeoutId = null;
+  }
+
+  const isCommandOrCtrl = event.metaKey || event.ctrlKey;
+  const isShift = event.shiftKey;
+
+  if (isCommandOrCtrl && isShift) {
+    // Normalize key to uppercase to handle both lower and uppercase
+    const keyAction = event.key.toUpperCase();
+    // Delay the execution slightly to distinguish between repeated and genuine keydowns
+    keydownTimeoutId = setTimeout(() => {
+      if (keyAction === 'S') {
+        // Handle 'S' key action
+        const selection = window.getSelection().toString().trim();
+        const epochTime = parseInt(selection, 10);
+        if (!isNaN(epochTime)) {
+          const convertedDate = new Date(epochTime * 1000).toLocaleString(); // Assuming epochTime is in seconds
+          showPopup(convertedDate, true);
+        }
+      } else if (keyAction === 'O') {
+        // Handle 'O' key action
+        showPopup(null, false);
+      }
+      keydownTimeoutId = null;
+    }, 50); // Adjust the delay as needed
   }
 });
 
@@ -30,32 +46,36 @@ function showPopup(date, isConvert = true) {
 
   const popup = document.createElement("div");
   popup.setAttribute("id", "epochConverterPopup");
-  if (isConvert) {
-    popup.innerHTML = `Converted Date: ${date}`;
-  } else {
-    popup.innerHTML = `Date now epoch time is: ${Date.now()}`;
-  }
+
+  const header = document.createElement("div");
+  header.style.cssText = `
+    display: flex;
+    justify-content: flex-end;
+    padding-bottom: 10px;
+  `;
 
   const closeButton = document.createElement("span");
   closeButton.innerHTML = "&times;";
   closeButton.style.cssText = `
-    position: absolute;
-    top: 5px;
-    right: 10px;
     cursor: pointer;
     color: red;
-    border: 1px solid black;
-    border-radius: 50%;
+    font-size: 20px;
     padding: 0 5px;
-    padding-bottom: 5px;
-    height: 10px;
   `;
-
   closeButton.onclick = function () {
     popup.remove();
   };
 
-  popup.appendChild(closeButton);
+  header.appendChild(closeButton);
+  popup.appendChild(header);
+
+  const content = document.createElement("div");
+  if (isConvert && date !== null) {
+    content.innerHTML = `Converted Date: ${date}`;
+  } else if (!isConvert) {
+    content.innerHTML = `Date now epoch time is: ${Date.now()}`;
+  }
+  popup.appendChild(content);
 
   Object.assign(popup.style, {
     position: "fixed",
@@ -70,8 +90,11 @@ function showPopup(date, isConvert = true) {
     fontSize: "14px",
     color: "#000",
     display: "flex",
+    flexDirection: "column",
     justifyContent: "space-between",
-    width: "270px",
+    minWidth: "100px",
+    maxWidth: "90%",
+    width: "auto",
   });
 
   document.body.appendChild(popup);
