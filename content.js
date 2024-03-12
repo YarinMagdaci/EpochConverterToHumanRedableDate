@@ -26,8 +26,8 @@ document.addEventListener("keydown", function(event) {
         const selection = window.getSelection().toString().trim();
         const epochTime = parseInt(selection, 10);
         if (!isNaN(epochTime)) {
-          const convertedDate = new Date(epochTime * 1000).toLocaleString(); // Assuming epochTime is in seconds
-          showPopup(convertedDate, true);
+          const convertedDate = new Date(epochTime).toLocaleString(); // Assuming epochTime is in seconds
+          showPopup(convertedDate);
         }
       } else if (keyAction === 'O') {
         // Handle 'O' key action
